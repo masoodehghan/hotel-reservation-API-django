@@ -2,11 +2,12 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator
 
 
 class Location(models.Model):
-    latitude = models.DecimalField(max_digits=8)
-    longitude = models.DecimalField(max_digits=8)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     country = models.CharField(max_length=40)
     city = models.CharField(max_length=40)
     district = models.CharField(max_length=100)
@@ -14,7 +15,7 @@ class Location(models.Model):
 
 
 class Hotel(models.Model):
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='hotels')
+    location = models.OneToOneField(Location, on_delete=models.CASCADE, related_name='hotels')
     name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     description = models.TextField(default='')
@@ -30,12 +31,17 @@ class Room(models.Model):
     hotel = models.ForeignKey(
         Hotel, null=True, blank=True, on_delete=models.CASCADE, related_name='rooms'
     )
-    room_type = models.CharField(default='')
+    room_type = models.CharField(default='', max_length=20)
     number_of_rooms = models.PositiveSmallIntegerField()
     number_of_adult_beds = models.PositiveSmallIntegerField()
     number_of_child_beds = models.PositiveSmallIntegerField()
     floor = models.PositiveSmallIntegerField()
-    price = models.DecimalField(max_digits=8)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+
+    discount_percent = models.DecimalField(
+        max_digits=3, decimal_places=2, validators=[MaxValueValidator(100.00)]
+    )
+
     description = models.TextField(default='')
 
 
