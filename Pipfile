@@ -9,6 +9,9 @@ django-restframework = "*"
 djangorestframework = "*"
 environs = "*"
 pillow = "*"
+djangorestframework-simplejwt = "*"
+django-filter = "*"
+markdown = "*"
 
 [dev-packages]
 

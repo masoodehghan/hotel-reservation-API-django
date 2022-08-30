@@ -8,5 +8,8 @@ class HotelListCreatedView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        queryset = Hotel.objects.select_related('location').all()
+        queryset = Hotel.objects.select_related('location').order_by('-id')
         return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(host=self.request.user)

@@ -16,3 +16,12 @@ class HotelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hotel
         fields = '__all__'
+        read_only_fields = ['host', 'is_active']
+
+    def create(self, validated_data):
+        # print(validated_data['location'])
+        location = Location.objects.create(**validated_data.pop('location'))
+
+        hotel = Hotel.objects.create(location=location, **validated_data)
+
+        return hotel
