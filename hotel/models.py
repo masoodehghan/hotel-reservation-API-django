@@ -3,6 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator
+from django.urls import reverse
+import uuid
 
 
 class Location(models.Model):
@@ -23,9 +25,13 @@ class Hotel(models.Model):
         get_user_model(), on_delete=models.CASCADE, blank=True, related_name='hotels'
     )
     gallery = GenericRelation('Gallery')
+    slug = models.SlugField(allow_unicode=True, unique=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('hotel_detail', args=[self.pk])
 
 
 class Room(models.Model):
@@ -39,9 +45,10 @@ class Room(models.Model):
     floor = models.PositiveSmallIntegerField()
     price = models.DecimalField(max_digits=8, decimal_places=2)
     gallery = GenericRelation('Gallery')
+    uuid = models.UUIDField(default=uuid.uuid4)
 
     discount_percent = models.DecimalField(
-        max_digits=3, decimal_places=2, validators=[MaxValueValidator(100.00)]
+        max_digits=5, decimal_places=2, validators=[MaxValueValidator(100.00)]
     )
 
     description = models.TextField(default='')

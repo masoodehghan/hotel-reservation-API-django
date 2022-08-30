@@ -1,23 +1,20 @@
 from rest_framework import serializers
-from ...models import Hotel, Location, Gallery
+from ...models import Hotel, Location, Gallery, Room
 
 
 class GalleryRelatedField(serializers.RelatedField):
 
     def to_representation(self, value):
-
         return value.image.url
 
 
 class LocationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Location
         fields = '__all__'
 
 
 class HotelSerializer(serializers.ModelSerializer):
-
     gallery = GalleryRelatedField(many=True, read_only=True)
     location = LocationSerializer()
 
@@ -35,18 +32,66 @@ class HotelSerializer(serializers.ModelSerializer):
         return hotel
 
 
+class HotelMiniSerializer(serializers.ModelSerializer):
+    location = LocationSerializer(read_only=True)
+
+    class Meta:
+        model = Hotel
+        fields = '__all__'
+
+
 class GallerySerializer(serializers.ModelSerializer):
+    images = serializers.ListField(child=serializers.ImageField(), write_only=True, required=False)
 
     class Meta:
         model = Gallery
-        fields = ['image']
+        fields = ['image', 'images']
 
     def create(self, validated_data):
-        try:
-            hotel = Hotel.objects.get(pk=validated_data.pop('hotel_pk', None))
-        except Hotel.DoesNotExist:
-            raise serializers.ValidationError('hotel not found')
 
-        gallery = Gallery.objects.create(image=validated_data.get('image'), content_object=hotel)
+        if validated_data.get('hotel_pk'):
+            content_object = self._get_object_or_validation_error(
+                Hotel, validated_data.pop('hotel_pk')
+            )
+
+        else:
+            content_object = self._get_object_or_validation_error(
+                Room, validated_data.pop('room_pk')
+            )
+
+        gallery = Gallery.objects.create(image=validated_data.get('image'),
+                                         content_object=content_object)
+
+        if validated_data.get('images', None):
+            galleries = [Gallery(image=image, content_object=content_object)
+                         for image in validated_data['images']]
+
+            Gallery.objects.bulk_create(gallery)
+            return galleries
 
         return gallery
+
+    @staticmethod
+    def _get_object_or_validation_error(model, pk):
+        try:
+            content_object = model.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            raise serializers.ValidationError('room not found')
+
+        return content_object
+
+
+class RoomWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Room
+        fields = '__all__'
+
+
+class RoomReadSerializer(serializers.ModelSerializer):
+    hotel = HotelMiniSerializer(read_only=True)
+
+    # gallery = GalleryRelatedField(read_only=True)
+
+    class Meta:
+        model = Room
+        fields = '__all__'
