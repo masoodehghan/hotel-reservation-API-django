@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator
 
@@ -22,6 +22,7 @@ class Hotel(models.Model):
     host = models.ForeignKey(
         get_user_model(), on_delete=models.CASCADE, blank=True, related_name='hotels'
     )
+    gallery = GenericRelation('Gallery')
 
     def __str__(self):
         return self.name
@@ -37,6 +38,7 @@ class Room(models.Model):
     number_of_child_beds = models.PositiveSmallIntegerField()
     floor = models.PositiveSmallIntegerField()
     price = models.DecimalField(max_digits=8, decimal_places=2)
+    gallery = GenericRelation('Gallery')
 
     discount_percent = models.DecimalField(
         max_digits=3, decimal_places=2, validators=[MaxValueValidator(100.00)]
