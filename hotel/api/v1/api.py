@@ -3,7 +3,7 @@ from .serializers import (
     HotelSerializer,  GallerySerializer, RoomReadSerializer,
     RoomWriteSerializer
 )
-from ...models import Hotel, Location, Room, Gallery
+from ...models import Hotel, Room, Gallery
 from .permissions import IsHostOrReadOnly, IsGalleryHost, IsRoomHostOrReadOnly
 
 
