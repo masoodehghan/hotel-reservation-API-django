@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.urls import reverse
 import uuid
 
@@ -56,6 +56,9 @@ class Room(models.Model):
     def get_absolute_url(self):
         return reverse('room_detail', args=[self.uuid])
 
+    def __str__(self):
+        return f"{self.number_of_rooms} {self.price} {self.pk}"
+
 
 def photo_path(instance, filename):
 
@@ -82,3 +85,19 @@ class Gallery(models.Model):
         indexes = [
             models.Index(fields=['object_id', 'content_type'])
         ]
+
+
+class Reservation(models.Model):
+    start_date = models.DateField()
+    end_date = models.DateField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    is_canceled = models.BooleanField(default=False)
+    is_refund = models.BooleanField(default=False)
+
+    total_price = models.DecimalField(
+        max_digits=10, decimal_places=2, editable=False, blank=True, validators=[MinValueValidator(0)]
+    )
+
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='reservations')
+    guest = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, related_name='reservations')

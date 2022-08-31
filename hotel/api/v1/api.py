@@ -1,9 +1,9 @@
 from rest_framework import generics, permissions
 from .serializers import (
     HotelSerializer,  GallerySerializer, RoomReadSerializer,
-    RoomWriteSerializer
+    RoomWriteSerializer, ReservationSerializer
 )
-from ...models import Hotel, Room, Gallery
+from ...models import Hotel, Room, Gallery, Reservation
 from .permissions import IsHostOrReadOnly, IsGalleryHost, IsRoomHostOrReadOnly
 
 
@@ -86,3 +86,13 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
         queryset = Room.objects.select_related('hotel__host', 'hotel__location')
 
         return queryset
+
+
+class ReservationCreate(generics.ListCreateAPIView):
+    serializer_class = ReservationSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(guest=self.request.user)
+
+    def get_queryset(self):
+        return Reservation.objects.filter(guest_id=self.request.user.id)

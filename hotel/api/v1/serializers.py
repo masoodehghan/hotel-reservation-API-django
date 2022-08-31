@@ -1,5 +1,7 @@
+from datetime import date
 from rest_framework import serializers
-from ...models import Hotel, Location, Gallery, Room
+from ...models import Hotel, Location, Gallery, Room, Reservation
+from django.utils import timezone
 
 
 class GalleryRelatedField(serializers.RelatedField):
@@ -94,6 +96,8 @@ class RoomWriteSerializer(serializers.ModelSerializer):
         if self.context['request'].user.id != data['hotel'].host_id:
             raise serializers.ValidationError('you are not the hotel host')
 
+        return super().validate(data)
+
 
 class RoomReadSerializer(serializers.ModelSerializer):
     hotel = HotelMiniSerializer(read_only=True)
@@ -103,3 +107,30 @@ class RoomReadSerializer(serializers.ModelSerializer):
         model = Room
         fields = '__all__'
         read_only_fields = ['uuid']
+
+    def create(self, validated_data):
+        raise NotImplementedError()
+
+
+class ReservationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Reservation
+        fields = '__all__'
+        read_only_fields = ['guest', 'is_refund', 'is_canceled']
+
+    def validate(self, data):
+        room: Room = data['room']
+        start_date = data['start_date']
+        end_date = data['end_date']
+
+        if end_date <= start_date or start_date <= timezone.now().date():
+            raise serializers.ValidationError('enter valid dates.')
+
+        if room.reservations.exists():
+            for reservation in room.reservations.values('start_date', 'end_date'):
+
+                if reservation['start_date'] <= start_date <= reservation['end_date']:
+                    raise serializers.ValidationError('room is reserved already')
+
+        return data
