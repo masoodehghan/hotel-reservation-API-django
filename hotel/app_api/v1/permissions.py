@@ -18,7 +18,7 @@ class IsGalleryHost(BasePermission):
             return bool(obj.content_object.host_id == request.user.id)
 
 
-class IsRoomHost(BasePermission):
+class IsRoomHostOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True

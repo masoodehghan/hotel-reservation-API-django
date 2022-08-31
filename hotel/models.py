@@ -48,10 +48,13 @@ class Room(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
 
     discount_percent = models.DecimalField(
-        max_digits=5, decimal_places=2, validators=[MaxValueValidator(100.00)]
+        max_digits=5, decimal_places=2, validators=[MaxValueValidator(100.00)], null=True, blank=True
     )
 
     description = models.TextField(default='')
+
+    def get_absolute_url(self):
+        return reverse('room_detail', args=[self.uuid])
 
 
 def photo_path(instance, filename):

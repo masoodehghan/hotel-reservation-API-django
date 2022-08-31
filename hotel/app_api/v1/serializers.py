@@ -17,6 +17,8 @@ class LocationSerializer(serializers.ModelSerializer):
 class HotelSerializer(serializers.ModelSerializer):
     gallery = GalleryRelatedField(many=True, read_only=True)
     location = LocationSerializer()
+    host = serializers.CharField(source='host.username')
+    url = serializers.URLField(read_only=True, source='get_absolute_url')
 
     class Meta:
         model = Hotel
@@ -34,6 +36,7 @@ class HotelSerializer(serializers.ModelSerializer):
 
 class HotelMiniSerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
+    host = serializers.CharField(source='host.username')
 
     class Meta:
         model = Hotel
@@ -85,13 +88,18 @@ class RoomWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = '__all__'
+        read_only_fields = ['uuid']
+
+    def validate(self, data):
+        if self.context['request'].user.id != data['hotel'].host_id:
+            raise serializers.ValidationError('you are not the hotel host')
 
 
 class RoomReadSerializer(serializers.ModelSerializer):
     hotel = HotelMiniSerializer(read_only=True)
-
-    # gallery = GalleryRelatedField(read_only=True)
+    url = serializers.URLField(read_only=True, source='get_absolute_url')
 
     class Meta:
         model = Room
         fields = '__all__'
+        read_only_fields = ['uuid']

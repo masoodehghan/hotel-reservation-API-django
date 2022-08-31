@@ -4,12 +4,11 @@ from .serializers import (
     RoomWriteSerializer
 )
 from ...models import Hotel, Location, Room, Gallery
-from .permissions import IsHostOrReadOnly, IsGalleryHost, IsRoomHost
+from .permissions import IsHostOrReadOnly, IsGalleryHost, IsRoomHostOrReadOnly
 
 
 class HotelListCreatedView(generics.ListCreateAPIView):
     serializer_class = HotelSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         queryset = Hotel.objects.select_related('location').order_by('-id')
@@ -31,13 +30,14 @@ class HotelGalleryView(generics.CreateAPIView):
 class HotelDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = HotelSerializer
     permission_classes = [IsHostOrReadOnly]
+    lookup_field = 'slug'
 
     def get_queryset(self):
         return Hotel.objects.prefetch_related('gallery').all()
 
 
 class RoomListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsRoomHost]
+    permission_classes = [IsRoomHostOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -46,9 +46,10 @@ class RoomListCreateView(generics.ListCreateAPIView):
             return RoomReadSerializer
 
     def get_queryset(self):
-        queryset = Room.objects.select_related('hotel', 'hotel__location')
+        queryset = Room.objects.select_related('hotel', 'hotel__location',
+                                               'hotel__host')
 
-        return queryset
+        return queryset.order_by('-id')
 
 
 class RoomListByHotelView(generics.ListAPIView):
@@ -58,7 +59,7 @@ class RoomListByHotelView(generics.ListAPIView):
     def get_queryset(self):
         queryset = Room.objects.select_related('hotel', 'hotel__location')
 
-        return queryset
+        return queryset.filter(hotel__slug=self.kwargs['hotel_slug'])
 
 
 class RoomGalleryView(generics.CreateAPIView):
@@ -68,3 +69,20 @@ class RoomGalleryView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(room_pk=self.kwargs['room_pk'])
+
+
+class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsRoomHostOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return RoomWriteSerializer
+        else:
+            return RoomReadSerializer
+
+    lookup_field = 'uuid'
+
+    def get_queryset(self):
+        queryset = Room.objects.select_related('hotel__host', 'hotel__location')
+
+        return queryset
