@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from rest_framework import status
 from django.contrib.auth import get_user_model
-from .models import Hotel, Room, Gallery, Location
+from hotel.api.v1.models import Hotel, Location
 
 PASSWORD = '12345'
 HOTEL_URL = reverse('hotel_list')

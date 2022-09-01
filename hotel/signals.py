@@ -1,6 +1,6 @@
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from .models import Hotel, Reservation
+from hotel.api.v1.models import Hotel, Reservation
 from django.utils.text import slugify
 
 

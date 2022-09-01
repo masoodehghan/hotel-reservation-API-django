@@ -1,6 +1,5 @@
-from datetime import date
 from rest_framework import serializers
-from ...models import Hotel, Location, Gallery, Room, Reservation
+from .models import Hotel, Location, Gallery, Room, Reservation
 from django.utils import timezone
 
 
@@ -19,7 +18,7 @@ class LocationSerializer(serializers.ModelSerializer):
 class HotelSerializer(serializers.ModelSerializer):
     gallery = GalleryRelatedField(many=True, read_only=True)
     location = LocationSerializer()
-    host = serializers.CharField(source='host.username')
+    host = serializers.CharField(source='host.username', read_only=True)
     url = serializers.URLField(read_only=True, source='get_absolute_url')
 
     class Meta:
@@ -102,6 +101,7 @@ class RoomWriteSerializer(serializers.ModelSerializer):
 class RoomReadSerializer(serializers.ModelSerializer):
     hotel = HotelMiniSerializer(read_only=True)
     url = serializers.URLField(read_only=True, source='get_absolute_url')
+    gallery = GalleryRelatedField(read_only=True, many=True)
 
     class Meta:
         model = Room
@@ -112,8 +112,7 @@ class RoomReadSerializer(serializers.ModelSerializer):
         raise NotImplementedError()
 
 
-class ReservationSerializer(serializers.ModelSerializer):
-
+class ReservationWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = '__all__'
@@ -130,7 +129,28 @@ class ReservationSerializer(serializers.ModelSerializer):
         if room.reservations.exists():
             for reservation in room.reservations.values('start_date', 'end_date'):
 
-                if reservation['start_date'] <= start_date <= reservation['end_date']:
+                if reservation['start_date'] <= start_date <= reservation['end_date'] \
+                        or reservation['start_date'] <= end_date <= reservation['end_date']:
                     raise serializers.ValidationError('room is reserved already')
 
-        return data
+        return super().validate(data)
+
+
+class RoomMiniSerializer(serializers.ModelSerializer):
+    gallery = GalleryRelatedField(read_only=True, many=True)
+
+    class Meta:
+        model = Room
+        fields = '__all__'
+
+
+class ReservationReadSerializer(serializers.ModelSerializer):
+    room = RoomMiniSerializer(read_only=True)
+
+    class Meta:
+        model = Reservation
+        fields = '__all__'
+        read_only_fields = ['guest', 'is_refund', 'is_canceled']
+
+    def create(self, validated_data):
+        raise NotImplementedError()

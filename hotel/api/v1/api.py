@@ -1,18 +1,22 @@
 from rest_framework import generics, permissions
 from .serializers import (
     HotelSerializer,  GallerySerializer, RoomReadSerializer,
-    RoomWriteSerializer, ReservationSerializer
+    RoomWriteSerializer, ReservationReadSerializer, ReservationWriteSerializer
 )
-from ...models import Hotel, Room, Gallery, Reservation
+from .models import Hotel, Room, Gallery, Reservation
 from .permissions import IsHostOrReadOnly, IsGalleryHost, IsRoomHostOrReadOnly
+from .filters import HotelFilterSet
+from django_filters.rest_framework.backends import DjangoFilterBackend
 
 
 class HotelListCreatedView(generics.ListCreateAPIView):
     serializer_class = HotelSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = HotelFilterSet
 
     def get_queryset(self):
-        queryset = Hotel.objects.select_related('location').order_by('-id')
-        return queryset
+        queryset = Hotel.objects.select_related('location', 'host').prefetch_related('gallery')
+        return queryset.order_by('-id')
 
     def perform_create(self, serializer):
         serializer.save(host=self.request.user)
@@ -47,7 +51,7 @@ class RoomListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Room.objects.select_related('hotel', 'hotel__location',
-                                               'hotel__host')
+                                               'hotel__host').prefetch_related('gallery')
 
         return queryset.order_by('-id')
 
@@ -57,9 +61,9 @@ class RoomListByHotelView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
-        queryset = Room.objects.select_related('hotel', 'hotel__location')
+        queryset = Room.objects.select_related('hotel', 'hotel__location', 'hotel__host')
 
-        return queryset.filter(hotel__slug=self.kwargs['hotel_slug'])
+        return queryset.prefetch_related('gallery').filter(hotel__slug=self.kwargs['hotel_slug'])
 
 
 class RoomGalleryView(generics.CreateAPIView):
@@ -89,10 +93,18 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ReservationCreate(generics.ListCreateAPIView):
-    serializer_class = ReservationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ReservationWriteSerializer
+        else:
+            return ReservationReadSerializer
 
     def perform_create(self, serializer):
         serializer.save(guest=self.request.user)
 
     def get_queryset(self):
-        return Reservation.objects.filter(guest_id=self.request.user.id)
+        queryset = Reservation.objects.select_related('room', 'room__hotel')
+
+        return queryset.filter(guest=self.request.user)
