@@ -24,3 +24,12 @@ class IsRoomHostOrReadOnly(BasePermission):
             return True
 
         return bool(obj.hotel.host_id == request.user.id)
+
+
+class IsGuestOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+
+        return bool(obj.guest_id == request.user.id)
+

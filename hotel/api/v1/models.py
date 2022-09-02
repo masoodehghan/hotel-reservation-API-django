@@ -94,6 +94,7 @@ class Reservation(models.Model):
     updated = models.DateTimeField(auto_now=True)
     is_canceled = models.BooleanField(default=False)
     is_refund = models.BooleanField(default=False)
+    uuid = models.UUIDField(default=uuid.uuid4)
 
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, editable=False, blank=True, validators=[MinValueValidator(0)]
@@ -101,3 +102,6 @@ class Reservation(models.Model):
 
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='reservations')
     guest = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, blank=True, related_name='reservations')
+
+    def get_absolute_url(self):
+        return reverse('reservation_detail', args=[self.uuid])

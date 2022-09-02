@@ -1,12 +1,19 @@
+from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from .serializers import (
-    HotelSerializer,  GallerySerializer, RoomReadSerializer,
+    HotelSerializer, GallerySerializer, RoomReadSerializer,
     RoomWriteSerializer, ReservationReadSerializer, ReservationWriteSerializer
 )
 from .models import Hotel, Room, Gallery, Reservation
-from .permissions import IsHostOrReadOnly, IsGalleryHost, IsRoomHostOrReadOnly
+
+from .permissions import (
+    IsHostOrReadOnly, IsGalleryHost,
+    IsRoomHostOrReadOnly, IsGuestOrReadOnly
+)
+
 from .filters import HotelFilterSet
 from django_filters.rest_framework.backends import DjangoFilterBackend
+from rest_framework.exceptions import NotAcceptable
 
 
 class HotelListCreatedView(generics.ListCreateAPIView):
@@ -19,7 +26,10 @@ class HotelListCreatedView(generics.ListCreateAPIView):
         return queryset.order_by('-id')
 
     def perform_create(self, serializer):
-        serializer.save(host=self.request.user)
+        if self.request.user.role == get_user_model().Roles.GUEST:
+            raise NotAcceptable('only users with host or admin role can create hotel')
+        else:
+            serializer.save(host=self.request.user)
 
 
 class HotelGalleryView(generics.CreateAPIView):
@@ -92,7 +102,7 @@ class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
         return queryset
 
 
-class ReservationCreate(generics.ListCreateAPIView):
+class ReservationListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_serializer_class(self):
@@ -108,3 +118,17 @@ class ReservationCreate(generics.ListCreateAPIView):
         queryset = Reservation.objects.select_related('room', 'room__hotel')
 
         return queryset.filter(guest=self.request.user)
+
+
+class ReservationDetail(generics.RetrieveUpdateDestroyAPIView):
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return ReservationWriteSerializer
+        else:
+            return ReservationReadSerializer
+
+    permission_classes = [IsGuestOrReadOnly]
+    lookup_field = 'uuid'
+
+    def get_queryset(self):
+        return Reservation.objects.all()

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'debug_toolbar',
     'django_filters',
+    'drf_yasg',
 ]
 INTERNAL_IPS = [
   "127.0.0.1",

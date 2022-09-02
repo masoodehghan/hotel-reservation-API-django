@@ -12,6 +12,8 @@ pillow = "*"
 djangorestframework-simplejwt = "*"
 django-filter = "*"
 markdown = "*"
+celery = "*"
+drf-yasg = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"

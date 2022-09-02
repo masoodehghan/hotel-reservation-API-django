@@ -20,7 +20,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 User = get_user_model()
 
 
-class RegisterView(generics.CreateAPIView):
+class HostRegisterView(generics.CreateAPIView):
 
     @sensitive_post_parameters_m
     def dispatch(self, request, *args, **kwargs):
@@ -59,7 +59,14 @@ class RegisterView(generics.CreateAPIView):
         return self.get_response(user, acc_token, refresh_token, headers)
 
     def perform_create(self, serializer):
-        user = serializer.save()
+        user = serializer.save(role=User.Roles.HOST)
+        return user
+
+
+class GuestRegisterView(HostRegisterView):
+
+    def perform_create(self, serializer):
+        user = serializer.save(role=User.Roles.GUEST)
         return user
 
 

@@ -9,5 +9,6 @@ urlpatterns = [
     path('rooms/<int:room_pk>/gallery/', api.RoomGalleryView.as_view(), name='room_gallery'),
     path('<int:hotel_pk>/gallery/', api.HotelGalleryView.as_view(), name='hotel_gallery'),
     path('rooms/<uuid:uuid>/', api.RoomDetailView.as_view(), name='room_detail'),
-    path('reservations/', api.ReservationCreate.as_view(), name='reservation_create')
+    path('reservations/', api.ReservationListCreateView.as_view(), name='reservation_create'),
+    path('reservations/<uuid:uuid>/', api.ReservationDetail.as_view(), name='reservation_detail'),
 ]

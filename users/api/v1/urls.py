@@ -3,7 +3,9 @@ from . import api
 from rest_framework_simplejwt.views import TokenVerifyView, TokenObtainPairView
 
 urlpatterns = [
-    path('register/', api.RegisterView.as_view(), name='register'),
+    path('host/register/', api.HostRegisterView.as_view(), name='host_register'),
+    path('guest/register/', api.GuestRegisterView.as_view(), name='guest_register'),
+
     path('user/<uuid:uuid>/', api.UserDetail.as_view(), name='user-detail'),
     path('profile/', api.UserProfile.as_view(), name='profile'),
 

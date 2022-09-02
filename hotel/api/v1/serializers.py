@@ -24,7 +24,7 @@ class HotelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Hotel
         fields = '__all__'
-        read_only_fields = ['host', 'is_active', 'gallery']
+        read_only_fields = ['host', 'is_active', 'gallery', 'slug']
 
     def create(self, validated_data):
         # print(validated_data['location'])
@@ -116,7 +116,7 @@ class ReservationWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservation
         fields = '__all__'
-        read_only_fields = ['guest', 'is_refund', 'is_canceled']
+        read_only_fields = ['guest', 'is_refund', 'uuid']
 
     def validate(self, data):
         room: Room = data['room']
@@ -129,8 +129,8 @@ class ReservationWriteSerializer(serializers.ModelSerializer):
         if room.reservations.exists():
             for reservation in room.reservations.values('start_date', 'end_date'):
 
-                if reservation['start_date'] <= start_date <= reservation['end_date'] \
-                        or reservation['start_date'] <= end_date <= reservation['end_date']:
+                if start_date <= reservation['end_date'] \
+                        and reservation['start_date'] <= end_date:
                     raise serializers.ValidationError('room is reserved already')
 
         return super().validate(data)
@@ -146,11 +146,12 @@ class RoomMiniSerializer(serializers.ModelSerializer):
 
 class ReservationReadSerializer(serializers.ModelSerializer):
     room = RoomMiniSerializer(read_only=True)
+    url = serializers.URLField(source='get_absolute_url', read_only=True)
 
     class Meta:
         model = Reservation
         fields = '__all__'
-        read_only_fields = ['guest', 'is_refund', 'is_canceled']
+        read_only_fields = ['guest', 'is_refund', 'is_canceled', 'url']
 
     def create(self, validated_data):
         raise NotImplementedError()
