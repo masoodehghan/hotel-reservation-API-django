@@ -123,7 +123,7 @@ class ReservationWriteSerializer(serializers.ModelSerializer):
         start_date = data['start_date']
         end_date = data['end_date']
 
-        if end_date <= start_date or start_date <= timezone.now().date():
+        if start_date <= timezone.now().date() or end_date <= start_date:
             raise serializers.ValidationError('enter valid dates.')
 
         if room.reservations.exists():
