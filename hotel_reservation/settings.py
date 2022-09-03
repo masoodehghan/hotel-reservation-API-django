@@ -171,3 +171,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USE_COOKIE = True
 SESSION_AUTH = True
+
+
+from celery.schedules import crontab
+
+
+CELERY_BEAT_SCHEDULE = {
+    'remove-ended-reservations': {
+        'task': 'hotel.tasks.deletion',
+        'schedule': crontab(hour=0, minute=0, day_of_week=1),
+        'options': {
+            'expires': 15.0
+        }
+    }
+}
