@@ -191,3 +191,5 @@ CELERY_BEAT_SCHEDULE = {
         }
     }
 }
+
+CELERY_BROKER_URL="amqp://rabbitmq:5672/"

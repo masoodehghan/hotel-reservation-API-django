@@ -1,6 +1,7 @@
 .idea
 **__pycache__*
-db.sqlite3
-.env
-media*
+src/db.sqlite3
+src/.env
+**media*
 celerybeat-schedule
+db.env

@@ -13,9 +13,9 @@ django-filter = "*"
 markdown = "*"
 celery = "*"
 drf-yasg = "*"
+django-debug-toolbar = "*"
 
 [dev-packages]
-django-debug-toolbar = "*"
 
 [requires]
 python_version = "3.10"

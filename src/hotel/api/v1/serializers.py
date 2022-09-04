@@ -134,7 +134,6 @@ class ReservationWriteSerializer(serializers.ModelSerializer):
 
 
 class RoomMiniSerializer(serializers.ModelSerializer):
-    gallery = GalleryRelatedField(read_only=True, many=True)
 
     class Meta:
         model = Room
