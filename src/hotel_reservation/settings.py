@@ -72,6 +72,17 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
 
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'auth': '5/min',
+        'anon': '100/day',
+        'user': '150/day'
+    }
+
 }
 
 
@@ -193,3 +204,6 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 CELERY_BROKER_URL="amqp://rabbitmq:5672/"
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'hotelreservation@test.com'

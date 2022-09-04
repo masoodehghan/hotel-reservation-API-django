@@ -12,7 +12,7 @@ def send_reset_password_email(
 
     protocol = 'https' if use_https else 'http'
     url = reverse(
-        'v1:password_reset_confirm',
+        'password_reset_confirm',
         kwargs={
             'uid': uid,
             'token': token})

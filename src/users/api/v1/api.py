@@ -33,6 +33,7 @@ class HostRegisterView(generics.CreateAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
+    throttle_scope = 'auth'
 
     def get_response(self, user, access_token, refresh_token, headers):
 
@@ -79,6 +80,7 @@ class UserDetail(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.defer('password', 'is_active', 'is_staff', 'date_joined')
+    throttle_scope = 'auth'
 
     lookup_field = 'uuid'
 
@@ -101,6 +103,7 @@ class LoginView(generics.GenericAPIView):
 
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'auth'
 
     refresh_token = None
     access_token = None
@@ -109,7 +112,6 @@ class LoginView(generics.GenericAPIView):
     def login(self):
         self.user = self.serializer.validated_data['user']
         self.refresh_token, self.access_token = jwt_encode(self.user)
-
         if getattr(settings, 'SESSION_AUTH', False):
             session_login(self.request, self.user)
 
@@ -128,6 +130,8 @@ class LoginView(generics.GenericAPIView):
         return response
 
     def post(self, request, *args, **kwargs):
+        print(self.request.version)
+
         self.serializer = self.get_serializer(data=request.data)
         self.serializer.is_valid(raise_exception=True)
 
@@ -137,6 +141,7 @@ class LoginView(generics.GenericAPIView):
 
 class RefreshTokenView(TokenRefreshView):
     serializer_class = TokenRefreshCookieSerializer
+    throttle_scope = 'auth'
 
     def finalize_response(self, request, response, *args, **kwargs):
 
@@ -150,6 +155,7 @@ class RefreshTokenView(TokenRefreshView):
 
 
 class LogoutView(APIView):
+    throttle_scope = 'auth'
 
     def post(self, request, *args, **kwargs):
 
@@ -167,6 +173,8 @@ class PasswordChangeView(generics.GenericAPIView):
     @sensitive_post_parameters_m
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
+    throttle_scope = 'auth'
+
 
     serializer_class = PasswordChangeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -188,6 +196,7 @@ class PasswordResetView(generics.GenericAPIView):
 
     serializer_class = PasswordResetSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'auth'
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -201,6 +210,7 @@ class PasswordResetView(generics.GenericAPIView):
 class ResetPasswordConfirmView(generics.GenericAPIView):
     serializer_class = PasswordResetCompleteSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_scope = 'auth'
 
     @sensitive_post_parameters_m
     def dispatch(self, request, *args, **kwargs):
