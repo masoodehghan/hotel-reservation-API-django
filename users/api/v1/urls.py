@@ -23,4 +23,7 @@ urlpatterns = [
          api.ResetPasswordConfirmView.as_view(),
          name='password_reset_confirm'
          ),
+
+    path('reviews/', api.ReviewCreateView.as_view(), name='review'),
+    path('reviews/<int:pk>', api.ReviewDetail.as_view(), name='review_detail'),
 ]

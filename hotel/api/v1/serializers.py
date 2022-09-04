@@ -27,7 +27,6 @@ class HotelSerializer(serializers.ModelSerializer):
         read_only_fields = ['host', 'is_active', 'gallery', 'slug']
 
     def create(self, validated_data):
-        # print(validated_data['location'])
         location = Location.objects.create(**validated_data.pop('location'))
 
         hotel = Hotel.objects.create(location=location, **validated_data)
@@ -95,7 +94,7 @@ class RoomWriteSerializer(serializers.ModelSerializer):
         if self.context['request'].user.id != data['hotel'].host_id:
             raise serializers.ValidationError('you are not the hotel host')
 
-        return super().validate(data)
+        return data
 
 
 class RoomReadSerializer(serializers.ModelSerializer):
@@ -108,9 +107,6 @@ class RoomReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['uuid']
 
-    def create(self, validated_data):
-        raise NotImplementedError()
-
 
 class ReservationWriteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -119,15 +115,16 @@ class ReservationWriteSerializer(serializers.ModelSerializer):
         read_only_fields = ['guest', 'is_refund', 'uuid']
 
     def validate(self, data):
-        room: Room = data['room']
-        start_date = data['start_date']
-        end_date = data['end_date']
+        room: Room = data.get('room')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
 
-        if start_date <= timezone.now().date() or end_date <= start_date:
-            raise serializers.ValidationError('enter valid dates.')
+        if start_date and end_date:
+            if start_date < timezone.now().date() or end_date <= start_date:
+                raise serializers.ValidationError('enter valid dates.')
 
-        if room.reservations.exists():
-            for reservation in room.reservations.values('start_date', 'end_date'):
+        if room:
+            for reservation in room.reservations.filter(is_canceled=False).values('start_date', 'end_date'):
 
                 if start_date <= reservation['end_date'] \
                         and reservation['start_date'] <= end_date:
@@ -152,6 +149,3 @@ class ReservationReadSerializer(serializers.ModelSerializer):
         model = Reservation
         fields = '__all__'
         read_only_fields = ['guest', 'is_refund', 'is_canceled', 'url']
-
-    def create(self, validated_data):
-        raise NotImplementedError()

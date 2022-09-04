@@ -7,7 +7,8 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from users.util import send_password_reset_to_user
-# from .tasks import send_reset_password_email
+from ...models import Review
+from ...tasks import send_reset_password_email
 
 
 UserModel = get_user_model()
@@ -166,12 +167,12 @@ class PasswordResetSerializer(serializers.Serializer):
         uid = urlsafe_base64_encode(force_bytes(self.validated_data['user'].pk))
         token = default_token_generator.make_token(self.validated_data['user'])
 
-        # send_reset_password_email.delay(
-        #     user_email=self.validated_data['email'],
-        #     uid=uid,
-        #     token=token,
-        #     use_https=request.is_secure()
-        # )
+        send_reset_password_email.delay(
+            user_email=self.validated_data['email'],
+            uid=uid,
+            token=token,
+            use_https=request.is_secure()
+        )
 
 
 class PasswordResetCompleteSerializer(serializers.Serializer):
@@ -203,3 +204,19 @@ class PasswordResetCompleteSerializer(serializers.Serializer):
     def save(self, **kwargs):
         self.instance.set_password(self.validated_data['new_password'])
         self.instance.save()
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+        read_only_fields = ['user']
+
+    def validate(self, attrs):
+
+        if attrs['hotel'].host_id == self.context['request'].user.id:
+            raise serializers.ValidationError('you cant vote to your own hotel')
+
+        return attrs
+    

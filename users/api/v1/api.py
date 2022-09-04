@@ -2,6 +2,7 @@ from rest_framework import permissions, generics
 from rest_framework.views import APIView
 from django.contrib.auth import login as session_login, logout
 
+from ...models import Review
 from ...util import (
     jwt_encode, set_cookie_jwt, set_cookie_jwt_refresh,
     set_cookie_jwt_access, unset_cookie_jwt, sensitive_post_parameters_m
@@ -11,11 +12,15 @@ from rest_framework.response import Response
 from django.conf import settings
 from .serializers import (
     UserSerializer, JWTSerializer, LoginSerializer, RegisterSerializer,
-    PasswordResetSerializer, PasswordChangeSerializer,
+    PasswordResetSerializer, PasswordChangeSerializer, ReviewSerializer,
     TokenRefreshCookieSerializer, PasswordResetCompleteSerializer, UserProfileSerializer
 )
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.views import TokenRefreshView
+from .permissions import IsReviewOwner
+from django.db.backends.base.base import DatabaseError
+from rest_framework.exceptions import NotAcceptable
+
 
 User = get_user_model()
 
@@ -208,3 +213,21 @@ class ResetPasswordConfirmView(generics.GenericAPIView):
         serializer.save()
 
         return Response({'detail': 'password change successfully'}, status.HTTP_200_OK)
+
+
+class ReviewCreateView(generics.CreateAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        try:
+            serializer.save(user=self.request.user)
+        except DatabaseError:
+            raise NotAcceptable('you cant vote again.')
+
+
+class ReviewDetail(generics.UpdateAPIView, generics.DestroyAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [IsReviewOwner]
+
+    queryset = Review.objects.all()

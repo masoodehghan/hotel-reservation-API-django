@@ -117,7 +117,7 @@ class ReservationListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Reservation.objects.select_related('room', 'room__hotel')
 
-        return queryset.filter(guest=self.request.user)
+        return queryset.prefetch_related('room__gallery').filter(guest=self.request.user)
 
 
 class ReservationDetail(generics.RetrieveUpdateDestroyAPIView):
