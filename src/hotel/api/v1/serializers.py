@@ -57,11 +57,15 @@ class GallerySerializer(serializers.ModelSerializer):
             content_object = self._get_object_or_validation_error(
                 Hotel, validated_data.pop('hotel_pk')
             )
+            if content_object.host_id != self.context['request'].user.id:
+                raise serializers.ValidationError('only host of hotel can add image to gallery')
 
         else:
             content_object = self._get_object_or_validation_error(
                 Room, validated_data.pop('room_pk')
             )
+            if content_object.hotel.host_id != self.context['request'].user.id:
+                raise serializers.ValidationError('only host of hotel can add image to gallery')
 
         gallery = Gallery.objects.create(image=validated_data.get('image'),
                                          content_object=content_object)

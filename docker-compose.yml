@@ -15,7 +15,8 @@ services:
     build:
       context: .
 
-    command: bash -c "python manage.py runserver 0.0.0.0:8000 & celery -A hotel_reservation worker -l INFO"
+    command: bash -c "/home/hotel_admin/entrypoint.sh"
+
     ports:
       - 8000:8000
 

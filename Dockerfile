@@ -14,5 +14,8 @@ RUN pip install pipenv && pipenv install --system
 USER hotel_admin
 
 
-COPY --chown=user:hotel_admin src /home/hotel_admin/code/
+COPY --chown=hotel_admin src /home/hotel_admin/code/
+
+COPY --chown=hotel_admin ./entrypoint.sh /home/hotel_admin/entrypoint.sh
+RUN chmod u+x ../entrypoint.sh
 

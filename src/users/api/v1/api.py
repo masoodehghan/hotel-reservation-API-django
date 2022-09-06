@@ -109,8 +109,8 @@ class LoginView(generics.GenericAPIView):
     access_token = None
     user = None
 
-    def login(self):
-        self.user = self.serializer.validated_data['user']
+    def login(self, user):
+        self.user = user
         self.refresh_token, self.access_token = jwt_encode(self.user)
         if getattr(settings, 'SESSION_AUTH', False):
             session_login(self.request, self.user)
@@ -132,10 +132,10 @@ class LoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         print(self.request.version)
 
-        self.serializer = self.get_serializer(data=request.data)
-        self.serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        self.login()
+        self.login(serializer.validated_data['user'])
         return self.get_response()
 
 
