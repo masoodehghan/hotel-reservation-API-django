@@ -21,7 +21,6 @@ env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -33,7 +32,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -44,11 +42,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # third-party
+    'oauth2_provider',
+    'social_django',
+    'drf_social_oauth2',
     'rest_framework',
     'debug_toolbar',
     'django_filters',
     'drf_yasg',
 
+    # local
     'users',
     'hotel',
 
@@ -61,10 +64,11 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
 
-
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         'users.authentication.JWTCookieAuthentication',
+        'drf_social_oauth2.authentication.SocialAuthentication',
 
     ),
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
@@ -85,9 +89,8 @@ REST_FRAMEWORK = {
 
 }
 
-
 INTERNAL_IPS = [
-  "127.0.0.1",
+    "127.0.0.1",
 
 ]
 MIDDLEWARE = [
@@ -100,7 +103,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 
 ROOT_URLCONF = 'hotel_reservation.urls'
 
@@ -116,6 +118,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect'
             ],
         },
     },
@@ -123,13 +127,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hotel_reservation.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE':  os.environ.get('POSTGRES_ENGINE', 'django.db.backends.sqlite3'),
+        'ENGINE': os.environ.get('POSTGRES_ENGINE', 'django.db.backends.sqlite3'),
         'NAME': os.environ.get('POSTGRES_DB', BASE_DIR / 'db.sqlite3'),
         'USER': os.environ.get('POSTGRES_USER'),
         'HOST': 'db',
@@ -150,6 +153,22 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30),  # TODO: change timedelta 5 minutes
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
 }
+ACTIVATE_JWT = True
+
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
+    'drf_social_oauth2.backends.DjangoOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('GOOGLE_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('GOOGLE_SECRET')
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -167,7 +186,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -193,12 +211,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USE_COOKIE = True
+AUTH_USE_COOKIE = False
 SESSION_AUTH = False
 
-
 from celery.schedules import crontab
-
 
 CELERY_BEAT_SCHEDULE = {
     'remove-ended-reservations': {
@@ -210,7 +226,7 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 
-CELERY_BROKER_URL="amqp://rabbitmq:5672/"
+CELERY_BROKER_URL = "amqp://rabbitmq:5672/"
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'hotelreservation@test.com'

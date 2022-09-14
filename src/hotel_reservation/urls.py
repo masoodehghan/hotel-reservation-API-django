@@ -23,6 +23,7 @@ urlpatterns = [
     path('__debug__/', include('debug_toolbar.urls')),
     path('api/v1/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='swagger_schema'),
     path('api/v1/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='swagger_redoc'),
+    path('api/v1/oauth/', include('drf_social_oauth2.urls', namespace='drf')),
 
 ]
 

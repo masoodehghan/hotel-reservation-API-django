@@ -15,6 +15,7 @@ celery = "*"
 drf-yasg = "*"
 django-debug-toolbar = "*"
 psycopg2-binary = "*"
+drf-social-oauth2 = "*"
 
 [dev-packages]
 
