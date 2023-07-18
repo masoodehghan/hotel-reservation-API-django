@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Hotel, Location, Gallery, Room, Reservation
 from django.utils import timezone
-from rest_framework.throttling import ScopedRateThrottle
 
 
 class GalleryRelatedField(serializers.RelatedField):

@@ -48,7 +48,8 @@ class Room(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4)
 
     discount_percent = models.DecimalField(
-        max_digits=5, decimal_places=2, validators=[MaxValueValidator(100.00)], null=True, blank=True
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        validators=[MaxValueValidator(100.00), MinValueValidator(0.00)]
     )
 
     description = models.TextField(default='')

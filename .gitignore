@@ -5,3 +5,5 @@ src/.env
 **media*
 celerybeat-schedule
 db.env
+lib*
+**env**

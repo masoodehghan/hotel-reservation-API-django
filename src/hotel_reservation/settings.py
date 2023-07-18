@@ -211,7 +211,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USE_COOKIE = False
+AUTH_USE_COOKIE = True
 SESSION_AUTH = False
 
 from celery.schedules import crontab
